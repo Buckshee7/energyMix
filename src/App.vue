@@ -1,6 +1,9 @@
 <template>
     <div>
         <h1>UK Energy Mix</h1>
+        <input type="date" v-model="dateFrom">
+        <input type="date" v-model="dateTo">
+        <button v-on:click="filterByDate" >Press Me</button>
         <display-chart :generationMix="generationMix"></display-chart>
     </div>
 </template>
@@ -12,15 +15,17 @@ export default {
   name: 'app',
   data(){
     return {
-      generationMix: []
+      generationMix: [],
+      dateFrom: "",
+      dateTo: "",
       }
   },
   mounted(){
-    this.fetchData()
+    this.fetchData("")
   },
   methods:{
-      fetchData(){
-          fetch('https://api.carbonintensity.org.uk/generation')
+      fetchData(filterDate){
+          fetch(`https://api.carbonintensity.org.uk/generation${filterDate}`)
           .then(resp => resp.json())
           .then(data => this.generationMix = this.formatForChart(data.data.generationmix))
       },
@@ -30,6 +35,12 @@ export default {
           return [object.fuel, object.perc]})
         newList.unshift(["Fuel", "Percentage"])
         return newList
+      },
+      getFilterDate(){
+        return `/${this.dateFrom}/${this.dateTo}`
+      },
+      filterByDate(){
+        this.fetchData(this.getFilterDate())
       }
   },
   components: {
