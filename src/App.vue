@@ -27,10 +27,12 @@ export default {
       fetchData(filterDate){
           fetch(`https://api.carbonintensity.org.uk/generation${filterDate}`)
           .then(resp => resp.json())
-          .then(data => this.generationMix = this.formatForChart(data.data.generationmix))
+          .then(data => this.generationMix = this.formatForChart(data.data))
       },
      
-      formatForChart(objectList) {
+      formatForChart(data) {
+        const objectList = Array.isArray(data) ? this.averager(data):data.generationmix
+        console.log(objectList)
         const newList = objectList.map((object)=>{
           return [object.fuel, object.perc]})
         newList.unshift(["Fuel", "Percentage"])
@@ -41,7 +43,25 @@ export default {
       },
       filterByDate(){
         this.fetchData(this.getFilterDate())
+      },
+
+      averager(list){
+        let newListOfObjects = []
+        for(let i = 0; i<list.length; i++){
+            for(let j = 0; j<list[i].generationmix.length; j++){
+                if (!newListOfObjects[j]) {
+                    newListOfObjects[j] = {'fuel':list[i].generationmix[j].fuel, 'perc':list[i].generationmix[j].perc}
+                } else {
+                    newListOfObjects[j].perc += list[i].generationmix[j].perc
+                }
+            }
+        }
+        newListOfObjects.forEach((object)=>{
+            object.perc = object.perc/list.length
+        })
+        return newListOfObjects
       }
+
   },
   components: {
     'display-chart': DisplayChart
